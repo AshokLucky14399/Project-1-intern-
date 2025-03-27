@@ -1,0 +1,93 @@
+import math
+import pandas as pd
+
+def mortgage_calculator(principal, annual_rate, years):
+    monthly_rate = annual_rate / 100 / 12
+    months = years * 12
+    if monthly_rate == 0:
+        return principal / months
+    monthly_payment = (principal * monthly_rate) / (1 - (1 + monthly_rate) ** -months)
+    return round(monthly_payment, 2)
+
+def investment_return_calculator(initial_investment, annual_rate, years):
+    future_value = initial_investment * ((1 + (annual_rate / 100)) ** years)
+    return round(future_value, 2)
+
+def savings_goal_calculator(goal_amount, years, annual_rate):
+    monthly_rate = annual_rate / 100 / 12
+    months = years * 12
+    if monthly_rate == 0:
+        return round(goal_amount / months, 2)
+    monthly_savings = goal_amount * monthly_rate / ((1 + monthly_rate) ** months - 1)
+    return round(monthly_savings, 2)
+
+def income_tax_calculator(annual_income, deductions=0, filing_status='single'):
+    tax_slabs = [(250000, 0), (500000, 5), (750000, 10), (1000000, 15), (1250000, 20), (1500000, 25), (float('inf'), 30)]
+    taxable_income = max(0, annual_income - deductions)
+    tax = 0
+    prev_limit = 0
+    for limit, rate in tax_slabs:
+        if taxable_income > prev_limit:
+            taxable_amount = min(taxable_income, limit) - prev_limit
+            tax += taxable_amount * (rate / 100)
+            prev_limit = limit
+        else:
+            break
+    return round(tax, 2)
+
+def bulk_processing(file_path):
+    df = pd.read_csv(file_path)
+    df['Monthly Mortgage'] = df.apply(lambda row: mortgage_calculator(row['Loan Amount'], row['Interest Rate'], row['Loan Term']), axis=1)
+    df['Future Investment Value'] = df.apply(lambda row: investment_return_calculator(row['Initial Investment'], row['Return Rate'], row['Years']), axis=1)
+    df['Monthly Savings Needed'] = df.apply(lambda row: savings_goal_calculator(row['Savings Goal'], row['Years'], row['Return Rate']), axis=1)
+    df['Estimated Tax'] = df.apply(lambda row: income_tax_calculator(row['Annual Income'], row['Deductions'], row['Filing Status']), axis=1)
+    df.to_csv('output.csv', index=False)
+    print("Bulk calculations saved to output.csv")
+
+def main():
+    while True:
+        print("\nFinancial Planning Toolkit")
+        print("1. Mortgage Calculator")
+        print("2. Investment Return Calculator")
+        print("3. Savings Goal Calculator")
+        print("4. Income Tax Calculator")
+        print("5. Bulk Processing")
+        print("6. Exit")
+        choice = input("Enter your choice: ")
+        
+        if choice == '1':
+            principal = float(input("Enter loan amount: "))
+            annual_rate = float(input("Enter annual interest rate: "))
+            years = int(input("Enter loan term (years): "))
+            print("Monthly Mortgage Payment:", mortgage_calculator(principal, annual_rate, years))
+        
+        elif choice == '2':
+            initial_investment = float(input("Enter initial investment: "))
+            annual_rate = float(input("Enter expected annual return rate: "))
+            years = int(input("Enter investment time horizon (years): "))
+            print("Future Investment Value:", investment_return_calculator(initial_investment, annual_rate, years))
+        
+        elif choice == '3':
+            goal_amount = float(input("Enter savings goal amount: "))
+            years = int(input("Enter time frame (years): "))
+            annual_rate = float(input("Enter expected annual return rate: "))
+            print("Monthly Savings Needed:", savings_goal_calculator(goal_amount, years, annual_rate))
+        
+        elif choice == '4':
+            annual_income = float(input("Enter annual income: "))
+            deductions = float(input("Enter deductions: "))
+            filing_status = input("Enter filing status (single/married): ")
+            print("Estimated Tax Liability:", income_tax_calculator(annual_income, deductions, filing_status))
+        
+        elif choice == '5':
+            file_path = input("Enter CSV file path for bulk processing: ")
+            bulk_processing(file_path)
+        
+        elif choice == '6':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+if __name__ == "__main__":
+    main()
